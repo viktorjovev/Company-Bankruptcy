@@ -1,0 +1,344 @@
+---
+title: "Company Bankruptcy - Regression Analysis"
+fontsize: 10pt
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+---
+
+## Loading Dataset
+
+```{r message=FALSE}
+library(DT)
+df<-read.csv("C:/Users/angel/Downloads/data.csv")
+X<-df[-c(1)]
+y<-df[1]
+datatable(head(df,50))
+```
+Y - Bankrupt?: Class label  
+X1 - ROA(C) before interest and depreciation before interest: Return On Total Assets(C)  
+X2 - ROA(A) before interest and % after tax: Return On Total Assets(A)  
+X3 - ROA(B) before interest and depreciation after tax: Return On Total Assets(B)  
+X4 - Operating Gross Margin: Gross Profit/Net Sales  
+X5 - Realized Sales Gross Margin: Realized Gross Profit/Net Sales  
+X6 - Operating Profit Rate: Operating Income/Net Sales  
+X7 - Pre-tax net Interest Rate: Pre-Tax Income/Net Sales  
+X8 - After-tax net Interest Rate: Net Income/Net Sales  
+X9 - Non-industry income and expenditure/revenue: Net Non-operating Income Ratio  
+X10 - Continuous interest rate (after tax): Net Income-Exclude Disposal Gain or Loss/Net Sales  
+X11 - Operating Expense Rate: Operating Expenses/Net Sales  
+X12 - Research and development expense rate: (Research and Development Expenses)/Net Sales  
+X13 - Cash flow rate: Cash Flow from Operating/Current Liabilities  
+X14 - Interest-bearing debt interest rate: Interest-bearing Debt/Equity  
+X15 - Tax rate (A): Effective Tax Rate  
+X16 - Net Value Per Share (B): Book Value Per Share(B)  
+X17 - Net Value Per Share (A): Book Value Per Share(A)  
+X18 - Net Value Per Share (C): Book Value Per Share(C)  
+X19 - Persistent EPS in the Last Four Seasons: EPS-Net Income  
+X20 - Cash Flow Per Share  
+X21 - Revenue Per Share (Yuan ¥): Sales Per Share  
+X22 - Operating Profit Per Share (Yuan ¥): Operating Income Per Share  
+X23 - Per Share Net profit before tax (Yuan ¥): Pretax Income Per Share  
+X24 - Realized Sales Gross Profit Growth Rate  
+X25 - Operating Profit Growth Rate: Operating Income Growth  
+X26 - After-tax Net Profit Growth Rate: Net Income Growth  
+X27 - Regular Net Profit Growth Rate: Continuing Operating Income after Tax Growth  
+X28 - Continuous Net Profit Growth Rate: Net Income-Excluding Disposal Gain or Loss Growth  
+X29 - Total Asset Growth Rate: Total Asset Growth  
+X30 - Net Value Growth Rate: Total Equity Growth  
+X31 - Total Asset Return Growth Rate Ratio: Return on Total Asset Growth  
+X32 - Cash Reinvestment %: Cash Reinvestment Ratio  
+X33 - Current Ratio  
+X34 - Quick Ratio: Acid Test  
+X35 - Interest Expense Ratio: Interest Expenses/Total Revenue  
+X36 - Total debt/Total net worth: Total Liability/Equity Ratio  
+X37 - Debt ratio %: Liability/Total Assets  
+X38 - Net worth/Assets: Equity/Total Assets  
+X39 - Long-term fund suitability ratio (A): (Long-term Liability+Equity)/Fixed Assets  
+X40 - Borrowing dependency: Cost of Interest-bearing Debt  
+X41 - Contingent liabilities/Net worth: Contingent Liability/Equity  
+X42 - Operating profit/Paid-in capital: Operating Income/Capital  
+X43 - Net profit before tax/Paid-in capital: Pretax Income/Capital  
+X44 - Inventory and accounts receivable/Net value: (Inventory+Accounts Receivables)/Equity  
+X45 - Total Asset Turnover  
+X46 - Accounts Receivable Turnover  
+X47 - Average Collection Days: Days Receivable Outstanding  
+X48 - Inventory Turnover Rate (times)  
+X49 - Fixed Assets Turnover Frequency  
+X50 - Net Worth Turnover Rate (times): Equity Turnover  
+X51 - Revenue per person: Sales Per Employee  
+X52 - Operating profit per person: Operation Income Per Employee  
+X53 - Allocation rate per person: Fixed Assets Per Employee  
+X54 - Working Capital to Total Assets  
+X55 - Quick Assets/Total Assets  
+X56 - Current Assets/Total Assets  
+X57 - Cash/Total Assets  
+X58 - Quick Assets/Current Liability  
+X59 - Cash/Current Liability  
+X60 - Current Liability to Assets  
+X61 - Operating Funds to Liability  
+X62 - Inventory/Working Capital  
+X63 - Inventory/Current Liability  
+X64 - Current Liabilities/Liability  
+X65 - Working Capital/Equity  
+X66 - Current Liabilities/Equity  
+X67 - Long-term Liability to Current Assets  
+X68 - Retained Earnings to Total Assets  
+X69 - Total income/Total expense  
+X70 - Total expense/Assets  
+X71 - Current Asset Turnover Rate: Current Assets to Sales  
+X72 - Quick Asset Turnover Rate: Quick Assets to Sales  
+X73 - Working capitcal Turnover Rate: Working Capital to Sales  
+X74 - Cash Turnover Rate: Cash to Sales  
+X75 - Cash Flow to Sales  
+X76 - Fixed Assets to Assets  
+X77 - Current Liability to Liability  
+X78 - Current Liability to Equity  
+X79 - Equity to Long-term Liability  
+X80 - Cash Flow to Total Assets  
+X81 - Cash Flow to Liability  
+X82 - CFO to Assets  
+X83 - Cash Flow to Equity  
+X84 - Current Liability to Current Assets  
+X85 - Liability-Assets Flag: 1 if Total Liability exceeds Total Assets, 0 otherwise  
+X86 - Net Income to Total Assets  
+X87 - Total assets to GNP price  
+X88 - No-credit Interval  
+X89 - Gross Profit to Sales  
+X90 - Net Income to Stockholder's Equity  
+X91 - Liability to Equity  
+X92 - Degree of Financial Leverage (DFL)  
+X93 - Interest Coverage Ratio (Interest expense to EBIT)  
+X94 - Net Income Flag: 1 if Net Income is Negative for the last two years, 0 otherwise  
+X95 - Equity to Liability  
+
+## Summary for each variable
+```{r}
+library(skimr)
+skim(df)
+```
+
+## Correlation among variables
+In order to fit linear regression, we need some appropriate correlation among variables 
+```{r}
+corr_matrix <- round(cor(df[-c(1)]), 2) #drop the target column
+which(abs(corr_matrix) > 0.95 & corr_matrix < 1, arr.ind=TRUE)
+```
+## Linear Regression with one predictor
+
+```{r}
+plot(X$Net.worth.Assets, X$Current.Liability.to.Assets)
+plot(X$Net.worth.Assets, X$Equity.to.Liability)
+plot(X$Total.Asset.Turnover, X$Cash.Total.Assets)
+plot(X$Persistent.EPS.in.the.Last.Four.Seasons, X$Per.Share.Net.profit.before.tax..Yuan.Â..) #EPS- Earnings per share
+```
+The second model is non-linear model called *intrinsically linear*.
+It is linear cause it can be transformed to straight line by a logarithmic transformation.
+```{r}
+df.copy<- df[df$Equity.to.Liability > 0.1,]
+X.copy <- df.copy[-c(1)]
+exponential.model <- lm(log(X.copy$Equity.to.Liability) ~ X.copy$Net.worth.Assets)
+summary(exponential.model)
+summary(lm(X.copy$Equity.to.Liability~X.copy$Net.worth.Assets))
+plot(exponential.model)
+
+#The output was error cause there are x and y values that are not in domain of log-function.
+# Reminder: remove the outlier where Y=0.0 that is showed in second scatter plot.
+```
+### Interpreting the intercept and the slope in a regression model
+```{r}
+fit<-lm(X$Persistent.EPS.in.the.Last.Four.Seasons~X$Per.Share.Net.profit.before.tax..Yuan.Â..)
+summary(fit)
+```
+There is no special interpreting on intercept. There will be if value of X is0, then intercept is expected value of Y.
+
+If the ratio of the variable 'Earnings Per Share-Net Income' increases by 1 unit value, then the variable 'Pretax Income Per Share' will increase by approximately 0.96. This is interpretation of the slope  
+
+### Residuals
+```{r}
+y<- X$Per.Share.Net.profit.before.tax..Yuan.Â..
+x<- X$Persistent.EPS.in.the.Last.Four.Seasons
+fit2<-lm(y~x)
+# With implemented method
+e<- resid(fit2)
+#Now we're going to obtain the residuals manually, firs we need to get Ys by predicting
+yhat<-predict(fit2)
+#Residuals are defined by y-yhat
+#Let's check by comparing this with R's build in resid function
+max(abs(e-(y-yhat)))
+#Now, with hard coding the calculation of yhat
+max(abs(e-(y- coef(fit2)[1]-coef(fit2)[2]*x)))
+```
+### Residuals versus X
+Using this plot, we can see the instances of poor model fit
+```{r}
+plot(x, resid(lm(x~y)))
+plot(X.copy$Net.worth.Assets, X.copy$Equity.to.Liability) #nonlinear model
+abline(lm(X.copy$Equity.to.Liability ~ X.copy$Net.worth.Assets ), col='red')
+```
+Here's what happens when we focus on the residuals  
+
+```{r}
+y<- X.copy$Net.worth.Assets
+x<- X.copy$Equity.to.Liability
+library(ggplot2)
+ggplot(X.copy, aes(Equity.to.Liability, resid(lm(y~x)))) + 
+    geom_point(size = 3, col = "firebrick") + 
+    geom_hline(yintercept=0, color = "black") +
+    labs(x = "Equity.to.Liability", y = "Residuals") + 
+    theme_classic()
+```  
+Estimating residual variation
+```{r}
+fit<-lm(y~x); n<-length(y)
+#Comparing the estimate from lm comparing and  directly calculating from the residuals
+summary(fit)$sigma == sqrt(sum(resid(fit)^2)/(n-2))
+```
+### Summarizing variation
+```{r}
+y<- X$Per.Share.Net.profit.before.tax..Yuan.Â..
+x<- X$Persistent.EPS.in.the.Last.Four.Seasons
+fit<-lm(y~x)
+regress.var = sum((predict(fit)-mean(y))^2)
+residual.var = sum((y-predict(fit))^2)
+total.var= regress.var+residual.var
+total.var
+#To check, derive from equation for R squared R^2 = regress.var / total.var6
+regress.var/summary(fit)$r.squared
+```
+## Regression inference
+```{r}
+y<-X$Current.Liability.to.Assets; x<-X$Net.worth.Assets; n<-length(X$Net.worth.Assets)
+beta1<- cor(y,x)*sd(y)/sd(x)
+beta0<- mean(y)-beta1*mean(x)
+e <- y - beta0 - beta1*x
+sigma<- sqrt(sum(e^2)/(n-2))
+ssx<- sum((x-mean(x))^2) #sum of squared deviations from the mean of X
+
+#Calculate standard errors for the coefficients and t-statistic
+#Null hypotheses are Ho : Bj=0
+seBeta0<- (1 / n + mean(x) ^ 2 / ssx) ^ 0.5 * sigma
+seBeta1<- sigma/sqrt(ssx)
+tBeta0 <- beta0 / seBeta0
+tBeta1 <- beta1 / seBeta1
+
+#p-values
+pBeta0 <- 2 * pt(abs(tBeta0), df = n-2, lower.tail = FALSE)
+pBeta1 <- 2 * pt(abs(tBeta1), df = n-2, lower.tail = FALSE)
+coefTable<-rbind(c(beta0,seBeta0,tBeta0,pBeta0), c(beta1, seBeta1, tBeta1, pBeta1))
+colnames(coefTable)<- c("Estimates", "Std. Error", "t value", "P(>|t|)")
+rownames(coefTable)<- c("(Intercept)","x")
+coefTable
+
+#built-in methods
+fit<-lm(y~x)
+summary(fit)$coefficients
+```
+### Getting a confidence interval
+Confidence interval for the intercept
+```{r}
+sumCoef<- summary(fit)$coefficients
+sumCoef[1,1]+c(-1,1)*qt(0.95, df=fit$df)*sumCoef[1,2]
+```
+Now, let's do the slope:
+```{r}
+sumCoef[2,1]+c(-1,1)*qt(0.95, df=fit$df)*sumCoef[2,2]
+```
+We would interpret this as: **"with 95% confidence, we estimate that if Net Worth Assets ratio increase by 1, the Current Liability to Assets ratio will decrease by approximately -0.79 to -0.77"** 
+```{r}
+library(ggplot2)
+ggplot(df[1:200,], aes(x=Net.worth.Assets, y=Current.Liability.to.Assets)) + 
+  geom_point(color='#2980B9', size = 4) + 
+  geom_smooth(method=lm, color='#2C3E50')
+#The gray bands around the line represent the standard error of the regression line
+```
+## Multivariable regression analysis
+```{r}
+#Targer->compute beta1
+x1<-X$Revenue.per.person
+x2<-X$Working.Capital.Equity
+x3<-X$Fixed.Assets.to.Assets
+y<-X$Research.and.development.expense.rate
+#Get the residuals having removed X2 and X3 from X1 and Y
+ey<-resid(lm(y ~ x2 + x3))
+ex1<-resid(lm(x1 ~ x2 + x3))
+#Fit regression through the origin with the residuals
+sum(ey * ex1)/sum(ex1 ^ 2)
+#Check with built-in method lm
+coef(lm(ey ~ ex1 - 1))
+#Fit the full linear model to show that it agrees
+coef(lm(y~x1+x2+x3))
+```
+```{r}
+#Examples with more features
+data<- df[,c("Working.Capital.to.Total.Assets","Quick.Assets.Total.Assets","Current.Assets.Total.Assets","Cash.Flow.to.Sales","Working.capitcal.Turnover.Rate","Debt.ratio..","Net.worth.Assets")]
+summary(lm(Working.Capital.to.Total.Assets ~ ., data=data))
+summary(lm(Quick.Assets.Total.Assets ~ . - Net.worth.Assets, data=data))
+```
+## Dummy variables
+```{r}
+library(dplyr)
+data = mutate(data, RevenuePerEmployee = 1 * (X$Revenue.per.person > 0.018))
+library(ggplot2)
+g = ggplot(data[1900:2200,], aes(x=Working.Capital.to.Total.Assets, y=Current.Assets.Total.Assets, color=factor(RevenuePerEmployee)))
+g = g + geom_point(size=3, colour = "black") + geom_point(size=2)
+g
+```
+Thus, -0.14 is the estimated change in the intercept of the linear relationship between Working Captial to Total Assets and Current.Assets.Total.Assets when Revenue per person is high.
+The interaction term, 0.287, is the estimate change in the slope. The estimated intercept is -1.48 when Revenue per person is low, while the estimated intercept is -1.48 + 0.287. The estimated slope is 2.39 if Revenue per person is low, else 2.39 + 0.287. Since, all of the main effects are change in the intercepts from the reference level, while all of the interaction terms are changes in slope.
+
+```{r}
+summary(lm(Current.Assets.Total.Assets ~ Working.Capital.to.Total.Assets * factor(RevenuePerEmployee),data=data))$coef
+#The interaction term is the estimate change in the slope.
+```
+## Residuals, variation, diagnostic
+```{r}
+plot(lm(Working.Capital.to.Total.Assets ~ ., data=data))
+```
+### Outliers, Leverage, Influence
+```{r}
+fit<-lm(Working.Capital.to.Total.Assets ~ Net.worth.Assets, data=data)
+round(dfbetas(fit)[1:10,2],3) #change in individual coefficients when i-th point is deleted in fitting model
+round(hatvalues(fit)[1:10],3)# change in the predicted response when i-th point is deleted in fitting the model
+```
+## Variance Inflation Factor
+```{r}
+library(car)
+fit<-lm(Working.Capital.to.Total.Assets ~ . - Net.worth.Assets, data=data)
+vif(fit)
+# measure of the amount of multicollinearity in a set of multiple regression variables
+```
+## Principal Component Analysis
+```{r}
+companies.pca<-prcomp(df[, c(30:35)],center = TRUE, scale. = TRUE)
+summary(companies.pca)
+```
+```{r}
+library(devtools)
+install_github("vqv/ggbiplot")
+library(ggbiplot)
+ggbiplot(companies.pca) 
+```
+
+## Logistic Regression
+```{r}
+glm.fit<-glm(df$Bankrupt~companies.pca$x)
+summary(glm.fit)
+```
+
+The residual deviance shows how well the response is predicted by the model when the predictors are included.  
+
+The null deviance shows how well the response is predicted by the model with nothing but an intercept.  
+This increase in deviance is evidence of a significant lack of fit.
+
+We can also use the residual deviance to test whether the null hypothesis is true (i.e. Logistic regression model provides an adequate fit for the data). This is possible because the deviance is given by the chi-squared value at a certain degrees of freedom.
+
+## Poisson regression
+```{r}
+covid19<-read.csv("C:/Users/angel/Downloads/data (1).csv")
+summary(fit<-glm(abs(deaths) ~ cases, family="poisson", data=covid19[covid19$geoId=="AT",]))
+plot(fit)
+#y- deaths , x - cases
+```
