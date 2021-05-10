@@ -342,3 +342,11 @@ summary(fit<-glm(abs(deaths) ~ cases, family="poisson", data=covid19[covid19$geo
 plot(fit)
 #y- deaths , x - cases
 ```
+## ANOVA One-way test
+Ho: the two means are equal. 
+Ha: the two means are not equal
+p-value is less then 0.05, means that null hypothesis is rejected or mean of Net worth assets of bankrupt companies and non-bankrupt companies are different.
+```{r}
+dd <- data.frame(X,y=unlist(y))
+summary(aov(dd$Net.worth.Assets~y,dd))
+```
